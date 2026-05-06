@@ -1,0 +1,33 @@
+name: Exchange Email Report
+
+on:
+  workflow_dispatch:
+
+jobs:
+  email-report:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v4
+
+    - name: Install Exchange Online Module
+      shell: pwsh
+      run: |
+        Install-Module ExchangeOnlineManagement -Force -AllowClobber
+
+    - name: Run Email Report Script
+      shell: pwsh
+      env:
+        EXO_CERT_BASE64: ${{ secrets.EXO_CERT_BASE64 }}
+        EXO_CERT_PASSWORD: ${{ secrets.EXO_CERT_PASSWORD }}
+        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        ORG_DOMAIN: ${{ secrets.ORG_DOMAIN }}
+      run: |
+        ./scripts/exo_email_report.ps1
+
+    # - name: Upload CSV Artifact
+    #   uses: actions/upload-artifact@v4
+    #   with:
+    #     name: email-report
+    #     path: ${{ runner.temp }}/InboxEmails_Last24Hours.csv
