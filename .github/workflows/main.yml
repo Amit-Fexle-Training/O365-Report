@@ -1,33 +1,75 @@
-name: Exchange Email Report
+name: Mock Exchange Email Report
 
 on:
   workflow_dispatch:
 
 jobs:
-  email-report:
+  mock-report:
     runs-on: windows-latest
 
     steps:
-    - name: Checkout Repo
-      uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    - name: Install Exchange Online Module
-      shell: pwsh
-      run: |
-        Install-Module ExchangeOnlineManagement -Force -AllowClobber
+      - name: Install Exchange Module
+        shell: pwsh
+        run: |
+          Install-Module ExchangeOnlineManagement -Force -Scope CurrentUser
 
-    - name: Run Email Report Script
-      shell: pwsh
-      env:
-        EXO_CERT_BASE64: ${{ secrets.EXO_CERT_BASE64 }}
-        EXO_CERT_PASSWORD: ${{ secrets.EXO_CERT_PASSWORD }}
-        AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-        ORG_DOMAIN: ${{ secrets.ORG_DOMAIN }}
-      run: |
-        ./scripts/exo_email_report.ps1
+      - name: Recreate Certificate
+        shell: pwsh
+        run: |
+          $certBytes = [Convert]::FromBase64String("${{ secrets.CERT_BASE64 }}")
+          [IO.File]::WriteAllBytes("cert.pfx", $certBytes)
 
-    # - name: Upload CSV Artifact
-    #   uses: actions/upload-artifact@v4
-    #   with:
-    #     name: email-report
-    #     path: ${{ runner.temp }}/InboxEmails_Last24Hours.csv
+      - name: Validate Certificate Loading
+        shell: pwsh
+        run: |
+          $securePassword = ConvertTo-SecureString "${{ secrets.CERT_PASSWORD }}" -AsPlainText -Force
+
+          $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2(
+              "cert.pfx",
+              $securePassword,
+              [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::Exportable
+          )
+
+          Write-Host "Certificate Loaded Successfully"
+          Write-Host "Subject: $($cert.Subject)"
+          Write-Host "Thumbprint: $($cert.Thumbprint)"
+
+      - name: Generate Mock Email Report
+        shell: pwsh
+        run: |
+          $folder = "reports"
+
+          if (!(Test-Path $folder)) {
+              New-Item -ItemType Directory -Path $folder
+          }
+
+          $fileName = "$folder/Inbound-Email-$(Get-Date -Format yyyyMMdd).csv"
+
+          @(
+              [PSCustomObject]@{
+                  SenderAddress = "sender1@test.com"
+                  RecipientAddress = "user@test.com"
+                  Subject = "Test Email 1"
+                  Status = "Delivered"
+                  Received = (Get-Date)
+              }
+
+              [PSCustomObject]@{
+                  SenderAddress = "sender2@test.com"
+                  RecipientAddress = "user@test.com"
+                  Subject = "Test Email 2"
+                  Status = "Delivered"
+                  Received = (Get-Date)
+              }
+          ) | Export-Csv $fileName -NoTypeInformation
+
+          Write-Host "Mock report generated: $fileName"
+
+      - name: Upload Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: mock-email-report
+          path: reports/*.csv
