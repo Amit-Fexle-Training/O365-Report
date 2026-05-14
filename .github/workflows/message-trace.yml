@@ -1,0 +1,49 @@
+name: Exchange Message Trace POC
+
+on:
+  workflow_dispatch:
+
+jobs:
+  message-trace:
+    runs-on: windows-latest
+
+    steps:
+
+      - name: Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: Setup PowerShell Module
+        shell: pwsh
+        run: |
+          Install-Module ExchangeOnlineManagement `
+            -Scope CurrentUser `
+            -Force
+
+      - name: Decode PFX Certificate
+        shell: pwsh
+        env:
+          EXO_CERT_BASE64: ${{ secrets.EXO_CERT_BASE64 }}
+        run: |
+          $pfxPath = "$env:RUNNER_TEMP\exo_cert.pfx"
+
+          [IO.File]::WriteAllBytes(
+            $pfxPath,
+            [Convert]::FromBase64String($env:EXO_CERT_BASE64)
+          )
+
+          Write-Host "PFX created at: $pfxPath"
+
+      - name: Run Message Trace
+        shell: pwsh
+        env:
+          EXO_APP_ID: ${{ secrets.EXO_APP_ID }}
+          EXO_TENANT: ${{ secrets.EXO_TENANT }}
+          EXO_PFX_PASSWORD: ${{ secrets.EXO_PFX_PASSWORD }}
+        run: |
+          ./scripts/message-trace.ps1
+
+      - name: Upload CSV Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: message-trace-report
+          path: output/*.csv
