@@ -40,7 +40,8 @@ $dateEnd = $date
 $outputDir = ".\output"
 
 $recipientList = @(
-    "admin01@74wx1q.onmicrosoft.com"
+    "admin01@74wx1q.onmicrosoft.com",
+    "hf48@74wx1q.onmicrosoft.com"
 )
 
 New-Item `
