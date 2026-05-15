@@ -40,7 +40,7 @@ jobs:
           EXO_TENANT: ${{ secrets.EXO_TENANT }}
           EXO_PFX_PASSWORD: ${{ secrets.EXO_PFX_PASSWORD }}
         run: |
-          ./scripts/message-trace.ps1
+          ./scripts/message-trace2.ps1
 
       - name: Upload CSV Artifact
         uses: actions/upload-artifact@v6
