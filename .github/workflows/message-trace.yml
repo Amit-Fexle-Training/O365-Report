@@ -10,7 +10,7 @@ jobs:
     steps:
 
       - name: Checkout Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup PowerShell Module
         shell: pwsh
@@ -43,7 +43,7 @@ jobs:
           ./scripts/message-trace.ps1
 
       - name: Upload CSV Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: message-trace-report
-          path: output/*.csv
+          path: ${{ runner.temp }}/MessageTrace/*.csv
