@@ -30,7 +30,7 @@ Connect-ExchangeOnline `
 
 $date = Get-Date
 
-$dateStart = $date.AddDays(-50)
+$dateStart = $date.AddDays(-10)
 $dateEnd = $date
 
 # ==========================================
