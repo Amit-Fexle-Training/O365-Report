@@ -41,7 +41,9 @@ $outputDir = ".\output"
 
 $recipientList = @(
     "admin01@74wx1q.onmicrosoft.com",
-    "hf48@74wx1q.onmicrosoft.com"
+    "hf48@74wx1q.onmicrosoft.com",
+    "abcd@xyz.onmicrosoft.com",
+    "abcd@gmail.com"
 )
 
 New-Item `
